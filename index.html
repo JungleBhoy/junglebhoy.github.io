@@ -3,10 +3,91 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>FhanShare25 App</title>
+  <title>FhanShare25 - Celtic Season QR</title>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; background: #f9f9f9; }
+    h1 { text-align: center; color: #006400; }
+    label { font-weight: bold; margin-top: 10px; display: block; }
+    input, button { display: block; width: 100%; padding: 10px; margin-top: 5px; font-size: 1rem; }
+    button { background-color: #007f00; color: white; border: none; cursor: pointer; }
+    button:hover { background-color: #005f00; }
+    #qr, #msg { margin-top: 20px; text-align: center; }
+    #unlockBox { margin-top: 30px; }
+    footer { text-align: center; margin-top: 40px; font-size: 0.9em; color: #777; }
+  </style>
 </head>
 <body>
-  <h1>FhanShare25: Secure QR Sharing App</h1>
-  <p>This placeholder will be replaced by the full React + Firebase app on deployment.</p>
+  <h1>FhanShare25</h1>
+
+  <label for="card">Season Card Info:</label>
+  <input type="text" id="card" placeholder="123456 7 Row G Seat 42" />
+
+  <label for="email">Your Supporter Email:</label>
+  <input type="email" id="email" placeholder="you@bhoymail.com" />
+
+  <label for="pin">Create a 4-digit PIN:</label>
+  <input type="password" id="pin" maxlength="4" placeholder="e.g. 1967" />
+
+  <button onclick="prepareQR()">Generate Transfer (Locked)</button>
+
+  <div id="unlockBox">
+    <h3>Unlock QR Code</h3>
+    <input type="text" id="unlockKey" placeholder="Enter PIN or Email" />
+    <button onclick="unlockQR()">Unlock</button>
+  </div>
+
+  <div id="msg"></div>
+  <div id="qr"></div>
+
+  <footer>
+    &copy; 2025 FhanShare25 | Faithful Through & Through
+  </footer>
+
+  <script>
+    let secureData = {};
+
+    function prepareQR() {
+      const card = document.getElementById("card").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const pin = document.getElementById("pin").value.trim();
+      const msg = document.getElementById("msg");
+      if (!card || !email || pin.length !== 4) {
+        msg.innerHTML = "❌ Fill in all fields correctly (PIN must be 4 digits).";
+        msg.style.color = "red";
+        return;
+      }
+      const payload = {
+        card,
+        email,
+        pin,
+        validUntil: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()  // 24h expiry
+      };
+      secureData = { payload, unlocked: false };
+      msg.innerHTML = "🔒 QR code is ready, but locked. Enter your PIN or email to unlock below.";
+      msg.style.color = "black";
+    }
+
+    function unlockQR() {
+      const key = document.getElementById("unlockKey").value.trim();
+      const { email, pin } = secureData.payload || {};
+      const msg = document.getElementById("msg");
+      if (key === email || key === pin) {
+        QRCode.toCanvas(document.createElement('canvas'), JSON.stringify(secureData.payload), function (err, canvas) {
+          if (err) {
+            msg.innerHTML = "❌ Error generating QR.";
+            return;
+          }
+          document.getElementById("qr").innerHTML = "";
+          document.getElementById("qr").appendChild(canvas);
+          msg.innerHTML = "✅ QR code unlocked! Show this at the gate.";
+          msg.style.color = "green";
+        });
+      } else {
+        msg.innerHTML = "❌ Incorrect PIN or Email.";
+        msg.style.color = "red";
+      }
+    }
+  </script>
 </body>
 </html>
